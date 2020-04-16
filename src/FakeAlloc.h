@@ -26,10 +26,10 @@ public:
         _BlockNode* _nextBlock;
     };
 
-    _BlockNode* _Block_List_Array[_INDEX_SIZE];
-    char* _poolStart;
-    char* _poolEnd;
-    size_t _usedSize;
+    static _BlockNode* _Block_List_Array[_INDEX_SIZE];
+    static char* _poolStart;
+    static char* _poolEnd;
+    static size_t _usedSize;
 
     FakeAllocBase(){
         _poolStart=nullptr;

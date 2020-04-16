@@ -3,6 +3,11 @@
 //
 #include "FakeAlloc.h"
 
+FakeAllocBase::_BlockNode* FakeAllocBase::_Block_List_Array[FakeAllocBase::_INDEX_SIZE];
+char* FakeAllocBase::_poolStart=nullptr;
+char* FakeAllocBase::_poolEnd=nullptr;
+size_t FakeAllocBase::_usedSize=0;
+
 FakeAlloc::pointer FakeAlloc::allocate(size_type sz){
     assert(sz>0);
     size_t align_size=roundUp(sz);
