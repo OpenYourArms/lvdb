@@ -45,6 +45,7 @@ private:
     };
 };
 
+void test_journal();
 
 
 

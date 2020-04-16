@@ -1,13 +1,12 @@
 #include <iostream>
 #include <ctime>
 #include "src/Journal.h"
+#include "src/SkipList.h"
+#include "src/FakeAlloc.h"
 using namespace std;
 
 int main() {
     std::cout << "Hello, World!" << std::endl;
-    string fpth="some path";
-    OPERATION_p opp={1,{"kk","vv"}};
-    Journal journal(fpth);
-    journal._write(opp);
+    test_FakeAlloc();
     return 0;
 }

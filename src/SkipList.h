@@ -8,8 +8,11 @@
 #ifndef WIN32
 
 #include <iostream>
+#include <iomanip>
 #include <string>
 #include <cassert>
+#include <ctime>
+#include <vector>
 using namespace std;
 
 typedef unsigned long long ULL;
@@ -19,12 +22,16 @@ struct Data{
     string _value;
     ULL _sequenceNumber;
     int _op;
-    Data(int seq,int op,string k,string v=""):_sequenceNumber(seq),_op(op),_key(key),_value(v){}
+    Data()= default;
+    Data(int seq,int op,string k,string v=""):_sequenceNumber(seq),_op(op),_key(k),_value(v){}
+    friend ostream& operator<<(ostream& os,Data& a){
+        return os<<setiosflags(ios::left)<<setw(4)<<a._key<<" : "<<a._value;
+    }
 };
 
 class SkipList{
 
-    enum {_MAX_HEIGHT=12};
+    enum {_MAX_HEIGHT=5};
 struct Node{
     Data _data;
     Node* _next[1];
@@ -40,24 +47,31 @@ struct Node{
     }
 };
 public:
-    SkipList(){};
-    ~SkipList(){};
-    inline int randomHeight(){
-        return rand()%_MAX_HEIGHT + 1;
-    }
-    bool contains(string& key) const;
+    SkipList();
+    ~SkipList();
+    inline int randomHeight(){ return rand()%_MAX_HEIGHT + 1;}
+    bool contains(string& key);
     inline bool equal(string& a,string& b){ return a==b; }
-    Node* findGreatOrEqual(string &k, Node** prev) const;
+    Node* findGreatOrEqual(string &k, Node** prev);
     Node* findLast() const;
     Node* findLessThan(string& k) const;
     inline int getMaxHeight() const{ return _maxHeight; }
-    void insert(string& k);
-    inline bool keyIsAfterNode(string& k,Node* n)const{ return k>n->_data._key; }
-    Node* newNode(Data data,int height);
+    void insert(Data& data);
+    inline bool keyIsAfterNode(string& k,Node* n)const{ return n&&k>n->_data._key; }
+    Node* newNode(Data data,int height){
+        int sz= sizeof(Node) + sizeof(Node*)*(height-1);
+        char* p=(char*)malloc(sz);
+        return (Node*)new(p) Node(data);
+    }
+    void showNodes();
 private:
     int _maxHeight;
     unsigned int _seed;// init
+    Node* _head;
 };
+
+void test_SkipList();
+
 
 
 #endif
