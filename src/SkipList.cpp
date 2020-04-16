@@ -21,7 +21,8 @@ SkipList::~SkipList(){
     Node* nx=nullptr;
     while(now){
         nx=now->getNext(0);
-        free(now);
+        //free(now);
+        _fakeAlloc.deallocate(now,_sizeMap[now]);
         now=nx;
     }
 }

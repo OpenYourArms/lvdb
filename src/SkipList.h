@@ -13,6 +13,8 @@
 #include <cassert>
 #include <ctime>
 #include <vector>
+#include "FakeAlloc.h"
+
 using namespace std;
 
 typedef unsigned long long ULL;
@@ -60,7 +62,9 @@ public:
     inline bool keyIsAfterNode(string& k,Node* n)const{ return n&&k>n->_data._key; }
     Node* newNode(Data data,int height){
         int sz= sizeof(Node) + sizeof(Node*)*(height-1);
-        char* p=(char*)malloc(sz);
+        //char* p=(char*)malloc(sz);
+        char* p=_fakeAlloc.allocate(sz);
+        _sizeMap[p]=sz;
         return (Node*)new(p) Node(data);
     }
     void showNodes();
@@ -68,6 +72,8 @@ private:
     int _maxHeight;
     unsigned int _seed;// init
     Node* _head;
+    FakeAlloc _fakeAlloc;
+    unordered_map<void*,int> _sizeMap;
 };
 
 void test_SkipList();
