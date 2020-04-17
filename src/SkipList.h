@@ -7,29 +7,16 @@
 
 #ifndef WIN32
 
+#include "FakeAlloc.h"
+#include "lvmisc.h"
 #include <iostream>
 #include <iomanip>
 #include <string>
 #include <cassert>
 #include <ctime>
 #include <vector>
-#include "FakeAlloc.h"
 
 using namespace std;
-
-typedef unsigned long long ULL;
-
-struct Data{
-    string _key;
-    string _value;
-    ULL _sequenceNumber;
-    int _op;
-    Data()= default;
-    Data(int seq,int op,string k,string v=""):_sequenceNumber(seq),_op(op),_key(k),_value(v){}
-    friend ostream& operator<<(ostream& os,Data& a){
-        return os<<setiosflags(ios::left)<<setw(4)<<a._key<<" : "<<a._value;
-    }
-};
 
 class SkipList{
 
