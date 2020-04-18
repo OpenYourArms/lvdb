@@ -33,7 +33,7 @@ Journal::Journal(string filePath){
 
 Journal::~Journal(){
     if(_fileDescriptor!=-1){
-        //todo 写回block header
+        _writeBlockHeaderBack();
         close(_fileDescriptor);
     }
 }
@@ -42,7 +42,8 @@ void Journal::initBlockerHeader(){
     if(_logFileSize<FILE_ZERO_SIZE){
         _blockHeader.logSequence=time(nullptr);
         _blockHeader.keySequence=_blockHeader.logSequence+rand();
-        _blockHeader.nextChunkOffset=0;
+        _blockHeader.nextChunkOffset=sizeof(_blockHeader);
+        exFileSize(_fileDescriptor,MAX_BLOCK_SIZE);
     }else{
         pread(_fileDescriptor,&_blockHeader, sizeof(_blockHeader),_lastBlockOffset);
     }
@@ -55,11 +56,11 @@ void Journal::initData(Data& data,OperationInfo& opInfo,OPERATION_p& op){
     data._value=op.second.second;
 
     opInfo.type=data._op;
-    opInfo.keyLength= sizeof(ULL)+ sizeof(char)+ data._key.length();
+    opInfo.keyLength= sizeof(ULL)+ sizeof(char)+ strlen(data._key.c_str())+1;
     opInfo.keyInfo.keySequence=data._sequenceNumber;
     opInfo.keyInfo.type=data._op;
     opInfo.keyInfo.key=data._key;
-    opInfo.valueLength=data._value.length();
+    opInfo.valueLength=strlen(data._value.c_str())+1;
     opInfo.value=data._value;
 }
 
@@ -91,7 +92,6 @@ vector<Journal::LogChunk> Journal::initLogChunk(vector<OperationInfo>&vc){
     return res;
 }
 void Journal::_writeLogChunk(Journal::LogChunk& logChunk){
-    //todo 写入日志文件
     auto e1=logChunk.logChunkHeader;
     auto e2=logChunk.logInfo;
     cout<<"LogChunk::logChunkHeader"<<endl;
@@ -107,7 +107,22 @@ void Journal::_writeLogChunk(Journal::LogChunk& logChunk){
     }
     char buf[MAX_BLOCK_SIZE];
     int pos=0;
+    logChunk.toBuf(buf,pos);
+    cout<<"logChunk write done:\t"<<pos<<endl;
+    cout<<buf<<endl;
+    int leftSize=MAX_BLOCK_SIZE-_blockHeader.nextChunkOffset;
+    if(leftSize<logChunk.logChunkHeader.length){
+        _writeBlockHeaderBack();
+        _blockHeader.nextChunkOffset= sizeof(_blockHeader);
+        _lastBlockOffset+=MAX_BLOCK_SIZE;
+        exFileSize(_fileDescriptor,_lastBlockOffset+MAX_BLOCK_SIZE);
+    }
+    pwrite(_fileDescriptor,buf,pos,_lastBlockOffset+_blockHeader.nextChunkOffset);
+    _blockHeader.nextChunkOffset+=pos;
+}
 
+void Journal::_writeBlockHeaderBack(){
+    pwrite(_fileDescriptor,&_blockHeader, sizeof(_blockHeader),_lastBlockOffset);
 }
 
 Data Journal::_write(OPERATION_p op) {
@@ -127,12 +142,41 @@ Data Journal::_write(OPERATION_p op) {
     return data;
 }
 
-bool Journal::_write(vector<OPERATION_p> ops){}
+vector<Data> Journal::_write(vector<OPERATION_p> ops){
+    vector<Data> res;
+    vector<OperationInfo> opInfoVc;
+    for(auto& e:ops){
+        res.push_back(Data());
+        opInfoVc.push_back(OperationInfo());
+        initData(res.back(),opInfoVc.back(),e);
+    }
+    vector<LogChunk> vc=initLogChunk(opInfoVc);
+    for(auto& e:vc){
+        _writeLogChunk(e);
+    }
+    return res;
+}
 bool Journal::_read(){}
 
 void test_journal(){
     string fpth="/tmp/tmpp/log.txt";
     OPERATION_p opp={1,{"kk","vv"}};
+    vector<OPERATION_p> opvc;
+    int caseNum=500;
+    for(int i=0;i<caseNum;i++){
+        int op1=rand()%3;
+        string key="",item=to_string(rand());
+        int ti=rand()%100;
+        for(int j=0;j<ti;j++){
+            key+=item;
+        }
+        cout<<key<<endl;
+        opvc.push_back({op1,{key,key}});
+    }
     Journal journal(fpth);
     journal._write(opp);
+//    for(auto e:opvc){
+//        journal._write(e);
+//    }
+    journal._write(opvc);
 }

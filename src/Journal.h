@@ -26,6 +26,11 @@ private:
 
     struct KeyInfo{
         enum{DELETE=0,PUT=1,GET=2};
+        void toBuf(char buf[],int& pos){
+            toBuffer(buf,pos,keySequence);
+            toBuffer(buf,pos,type);
+            toBuffer(buf,pos,key);
+        }
         ULL keySequence;
         char type;
         string key;
@@ -33,6 +38,14 @@ private:
     struct OperationInfo{
         enum{OPINFO_HEADER_SIZE= sizeof(char)+sizeof(int)+sizeof(int)};
         enum{DELETE=0,PUT=1,GET=2};
+        void toBuf(char buf[],int& pos){
+            toBuffer(buf,pos,type);
+            toBuffer(buf,pos,keyLength);
+            keyInfo.toBuf(buf,pos);
+            toBuffer(buf,pos,valueLength);
+            toBuffer(buf,pos,value);
+        }
+
         char type;
         int keyLength;
         KeyInfo keyInfo;
@@ -40,9 +53,16 @@ private:
         string value;
     };
     struct LogInfo{
-        enum {LOG_INFO_HEADER_SIZE = sizeof(ULL)+sizeof(int)+sizeof(int),LOG_INFO_MAX_SIZE=MAX_BLOCK_SIZE/4};
+        enum {LOG_INFO_HEADER_SIZE = sizeof(ULL)+sizeof(int)+sizeof(int),LOG_INFO_MAX_SIZE=MAX_BLOCK_SIZE/4*3};
         LogInfo():logSequence(0),count(0),size(LOG_INFO_HEADER_SIZE){}
         void setLogSequence(int seq){logSequence=seq;}
+        void toBuf(char buf[],int& pos){
+            toBuffer(buf,pos,logSequence);
+            toBuffer(buf,pos,count);
+            toBuffer(buf,pos,size);
+            for(auto& e:operationVector) e.toBuf(buf,pos);
+        }
+
         ULL logSequence;
         int count;
         int size;
@@ -56,10 +76,20 @@ private:
             int length;
             char type;
             Header():checkSum(0),length(0),type(MIDDLE_CHUNK){}
+            void toBuf(char buf[],int& pos){
+                toBuffer(buf,pos,checkSum);
+                toBuffer(buf,pos,length);
+                toBuffer(buf,pos,type);
+            }
         };
-
+        //todo 求校验
         void setCheckSumAndLength(){logChunkHeader.length=LOG_CHUNK_HEADER_SIZE+logInfo.size;}
         void setType(char type){logChunkHeader.type=type;}
+        void toBuf(char buf[],int& pos){
+            logChunkHeader.toBuf(buf,pos);
+            logInfo.toBuf(buf,pos);
+        }
+
         Header logChunkHeader;
         LogInfo logInfo;
     };
@@ -76,8 +106,9 @@ public:
     void initData(Data& data,OperationInfo& opInfo,OPERATION_p& op);
     vector<LogChunk> initLogChunk(vector<OperationInfo>&vc);
     void _writeLogChunk(LogChunk& logChunk);
+    void _writeBlockHeaderBack();
     Data _write(OPERATION_p op);
-    bool _write(vector<OPERATION_p> ops);
+    vector<Data> _write(vector<OPERATION_p> ops);
     bool _read();
 
 private:
