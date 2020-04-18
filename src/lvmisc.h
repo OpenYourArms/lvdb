@@ -12,6 +12,9 @@
 #include <errno.h>
 #include <iomanip>
 #include <cassert>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
 
 using namespace std;
 typedef unsigned long long ULL;
@@ -42,7 +45,8 @@ template <>//加结尾\0
 void toBuffer(char buffer[],int& pos,const char* str);
 template <>//加结尾\0
 void toBuffer(char buffer[],int& pos,string str);
-
+void alignFileToMod(int fd,off_t mod);
+void exFileSize(int fd,off_t size);
 
 #endif
 
