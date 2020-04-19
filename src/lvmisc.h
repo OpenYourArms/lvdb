@@ -35,9 +35,9 @@ struct Data{
 
 template <typename T>
 void toBuffer(char buffer[],int& pos,T obj){
-    cout<<"call T\t:"<<obj<<endl;
+    //cout<<"call T\t:"<<obj<<endl;
     int sz=sizeof(obj);
-    memcpy(buffer+pos, reinterpret_cast<void*>(&obj),sz);
+    memcpy(buffer+pos, &obj,sz);
     pos+=sz;
 }
 
