@@ -22,11 +22,11 @@ Journal::Journal(string filePath){
     _logFileSize=fileStat.st_size;
     _lastBlockOffset=(_logFileSize-1)/MAX_BLOCK_SIZE*MAX_BLOCK_SIZE;
     //off_t filePointer=lseek(_fileDescriptor,fileSize,SEEK_SET);
-    cout<<_logFileSize<<endl;
-//    cout<<_lastBlockOffset<<endl;
-    cout<<_blockHeader.logSequence<<"\t"<<_blockHeader.keySequence<<"\t"<<_blockHeader.nextChunkOffset<<endl;
+    cout<<"logFileName\t"<<filePath<<endl;
+    cout<<"logFileSize\t"<<_logFileSize<<endl;
+    cout<<_blockHeader<<endl;
     initBlockerHeader();
-    cout<<_blockHeader.logSequence<<"\t"<<_blockHeader.keySequence<<"\t"<<_blockHeader.nextChunkOffset<<endl;
+    cout<<_blockHeader<<endl;
 //    cout<<lseek(_fileDescriptor,0,SEEK_CUR)<<endl;
 //    cout<<lseek(_fileDescriptor,0,SEEK_END)<<endl;
 }
@@ -92,19 +92,7 @@ vector<Journal::LogChunk> Journal::initLogChunk(vector<OperationInfo>&vc){
     return res;
 }
 void Journal::_writeLogChunk(Journal::LogChunk& logChunk){
-    auto e1=logChunk.logChunkHeader;
-    auto e2=logChunk.logInfo;
-    cout<<"LogChunk::logChunkHeader"<<endl;
-    cout<<e1.checkSum<<"\t"<<e1.length<<"\t"<<e1.type-0<<endl;
-    cout<<"LogChunk::logInfo.header"<<endl;
-    cout<<e2.logSequence<<"\t"<<e2.count<<"\t"<<e2.size<<endl;
-    cout<<"LogChunk::logInfo.OperationVector"<<endl;
-    int no=0;
-    for(auto e:e2.operationVector){
-        cout<<"no "<<no++<<"\t";
-        cout<<e.type-0<<"\t"<<e.keyLength<<"\t"<<e.keyInfo.keySequence<<"\t"<<e.keyInfo.type-0<<"\t"<<e.keyInfo.key
-        <<"\t"<<e.valueLength<<"\t"<<e.value<<endl;
-    }
+    cout<<logChunk<<endl;
     char buf[MAX_BLOCK_SIZE];
     int pos=0;
     logChunk.toBuf(buf,pos);
@@ -131,10 +119,7 @@ Data Journal::_write(OPERATION_p op) {
     initData(data,opInfo,op);
     cout<<"data: \t##\t";
     cout<<data<<endl;
-    cout<<"opInfo: \t##\t";
-    cout<<opInfo.type-0<<"\t"<<opInfo.keyLength<<"\t"<<opInfo.keyInfo.keySequence<<"\t"
-    << opInfo.keyInfo.type-0<<"\t"<<opInfo.keyInfo.key<<"\t"<<opInfo.valueLength<<"\t"<<opInfo.value<<endl;
-
+    cout<<opInfo<<endl;
     vector<LogChunk> vc=initLogChunk(vector<OperationInfo>()={opInfo});
     for(auto e:vc){
         _writeLogChunk(e);
@@ -156,17 +141,134 @@ vector<Data> Journal::_write(vector<OPERATION_p> ops){
     }
     return res;
 }
-bool Journal::_read(){}
+
+bool Journal::findBlockHeader(off_t& block,off_t& bOffset,ULL seq){
+    int lo=0,hi=_lastBlockOffset/MAX_BLOCK_SIZE;
+    while(lo<hi){
+        int mi=lo+(hi-lo)/2;
+        BlockHeader bh;
+        pread(_fileDescriptor,&bh, sizeof(BlockHeader),mi*MAX_BLOCK_SIZE);
+        if(bh.keySequence>=seq){
+            hi=mi;
+        }else{
+            lo=mi+1;
+        }
+    }
+    block=lo*MAX_BLOCK_SIZE;
+    bOffset= sizeof(BlockHeader);
+    ULL s=0;
+    int chunkSize=0;
+    do{
+        LogChunk logChunk;
+        readLogChunk(block,bOffset,logChunk);
+        chunkSize=logChunk.logChunkHeader.length;
+        vector<Data> dataVc;
+        logChunk.getChunkData(dataVc);
+        s=dataVc.back()._sequenceNumber;
+    }while(s<seq);
+    bOffset-=chunkSize;
+    // todo 返回值没有暂时，需要的话还要遍历data数组。
+    return s==seq;
+}
+void Journal::readKeyInfo(off_t& block,off_t& bOffset,KeyInfo& keyInfo,int length){
+    //todo
+    int sz= sizeof(keyInfo.keySequence);
+    pread(_fileDescriptor,&keyInfo.keySequence,sz,block+bOffset);
+    bOffset+=sz;
+    sz= sizeof(keyInfo.type);
+    pread(_fileDescriptor,&keyInfo.type,sz,block+bOffset);
+    bOffset+=sz;
+    sz= length-keyInfo.KEY_INFO_HEAD_SIZE;
+    char buf[MAX_LOG_SIZE];
+    pread(_fileDescriptor,buf,sz,block+bOffset);
+    bOffset+=sz;
+    keyInfo.key=buf;
+}
+void Journal::readOperationInfo(off_t& block,off_t& bOffset,OperationInfo& operationInfo){
+    //todo 优化pread,先写到内存，再用memcpy函数。
+    int sz= sizeof(operationInfo.type);
+    pread(_fileDescriptor,&operationInfo.type,sz,block+bOffset);
+    bOffset+=sz;
+    sz= sizeof(operationInfo.keyLength);
+    pread(_fileDescriptor,&operationInfo.keyLength,sz,block+bOffset);
+    bOffset+=sz;
+    readKeyInfo(block,bOffset,operationInfo.keyInfo,operationInfo.keyLength);
+    sz= sizeof(operationInfo.valueLength);
+    pread(_fileDescriptor,&operationInfo.valueLength,sz,block+bOffset);
+    bOffset+=sz;
+    sz=operationInfo.valueLength;
+    char buf[MAX_LOG_SIZE];
+    pread(_fileDescriptor,buf,sz,block+bOffset);
+    bOffset+=sz;
+    operationInfo.value=buf;
+}
+void Journal::readLogInfo(off_t& block,off_t& bOffset,LogInfo& logInfo){
+    //todo
+    int sz= sizeof(logInfo.logSequence);
+    pread(_fileDescriptor,&logInfo.logSequence,sz,block+bOffset);
+    bOffset+=sz;
+    sz= sizeof(logInfo.count);
+    pread(_fileDescriptor,&logInfo.count,sz,block+bOffset);
+    bOffset+=sz;
+    sz= sizeof(logInfo.size);
+    pread(_fileDescriptor,&logInfo.size,sz,block+bOffset);
+    bOffset+=sz;
+    sz=logInfo.size-LogInfo::LOG_INFO_HEADER_SIZE;
+    while(sz){
+        logInfo.operationVector.push_back(OperationInfo());
+        auto& e=logInfo.operationVector.back();
+        readOperationInfo(block,bOffset,e);
+        sz-=e.keyLength+e.valueLength+OperationInfo::OPINFO_HEADER_SIZE;
+    }
+}
+void Journal::readLogChunk(off_t& block,off_t& bOffset,LogChunk& logChunk){
+    int sz=sizeof(logChunk.logChunkHeader.checkSum);
+    pread(_fileDescriptor,&logChunk.logChunkHeader.checkSum,sz,block+bOffset);
+    bOffset+= sz;
+    sz=sizeof(logChunk.logChunkHeader.length);
+    pread(_fileDescriptor,&logChunk.logChunkHeader.length,sz,block+bOffset);
+    bOffset+=sz;
+    sz= sizeof(logChunk.logChunkHeader.type);
+    pread(_fileDescriptor,&logChunk.logChunkHeader.type,sz,block+bOffset);
+    bOffset+=sz;
+    //sz= logChunk.logChunkHeader.length-LogChunk::LOG_CHUNK_HEADER_SIZE; logInfo有自己的size了。
+    readLogInfo(block,bOffset,logChunk.logInfo);
+    // todo 读完本块最后一个chunk,需要自动跳block,方案有二，1 - 重新读header; 2 - 建立索引存每个block的尺寸。
+    // todo 可以被pread优化时把block放入内存，就可以直接取到了。
+}
+void Journal::LogChunk::getChunkData(vector<Data> &vcData){
+    //todo
+    for(auto& e:logInfo.operationVector){
+        vcData.push_back(Data());
+        auto& f=vcData.back();
+        f._key=e.keyInfo.key;
+        f._value=e.value;
+        f._sequenceNumber=e.keyInfo.keySequence;
+        f._op=e.keyInfo.type;
+    }
+}
+vector<Data> Journal::_read(ULL seq){
+    vector<Data> res;
+    off_t bOffset;
+    off_t block=0;
+    bool flag=findBlockHeader(block,bOffset,seq);
+    while(!(block==_lastBlockOffset&&bOffset==_blockHeader.nextChunkOffset)){
+        LogChunk logChunk;
+        readLogChunk(block,bOffset,logChunk);
+        logChunk.getChunkData(res);
+    }
+    return res;
+}
 
 void test_journal(){
     string fpth="/tmp/tmpp/log.txt";
     OPERATION_p opp={1,{"kk","vv"}};
     vector<OPERATION_p> opvc;
-    int caseNum=500;
+    int caseNum=2;
     for(int i=0;i<caseNum;i++){
         int op1=rand()%3;
         string key="",item=to_string(rand());
-        int ti=rand()%100;
+        int ti=rand()%2;
         for(int j=0;j<ti;j++){
             key+=item;
         }
@@ -174,9 +276,19 @@ void test_journal(){
         opvc.push_back({op1,{key,key}});
     }
     Journal journal(fpth);
-    journal._write(opp);
+//    Journal::LogChunk logChunk;
+
+//    off_t block=0,bOffset= sizeof(Journal::BlockHeader);
+//    journal.readLogChunk(block,bOffset,logChunk);
+//    cout<<logChunk<<endl;
+
+//    bool flag=journal.findBlockHeader(block,bOffset,2307195330);
+//    cout<<"res.bool\t"<<flag<<endl;
+//    cout<<block<<"\t"<<bOffset<<endl;
+    auto e=journal._read(0);
+    for(auto f:e) cout<<f<<endl;
 //    for(auto e:opvc){
 //        journal._write(e);
 //    }
-    journal._write(opvc);
+    //journal._write(opvc);
 }
