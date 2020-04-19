@@ -13,14 +13,14 @@ void showERROR(string str,bool ex){
 template <>
 void toBuffer(char buffer[],int& pos,const char* cstr){
     int len=strlen(cstr);
-    memcpy(buffer,cstr,len);
+    memcpy(buffer+pos,cstr,len);
     pos+=len;
     buffer[pos++]='\0';
 }
 
 template <>
 void toBuffer(char buffer[],int& pos,string str){
-    cout<<"call str\t:"<<str<<endl;
+    //cout<<"call str\t:"<<str<<endl;
     toBuffer(buffer,pos,str.c_str());
 }
 const int ALIGN_MOD=1024;
