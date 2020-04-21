@@ -19,7 +19,8 @@
 using namespace std;
 
 class SkipList{
-
+// todo 测试需要，把node公开，等待时机还原为private
+public:
     enum {_MAX_HEIGHT=5};
 struct Node{
     Data _data;
