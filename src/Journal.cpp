@@ -264,11 +264,11 @@ void test_journal(){
     string fpth="/tmp/tmpp/log.txt";
     OPERATION_p opp={1,{"kk","vv"}};
     vector<OPERATION_p> opvc;
-    int caseNum=2;
+    int caseNum=20;
     for(int i=0;i<caseNum;i++){
         int op1=rand()%3;
         string key="",item=to_string(rand());
-        int ti=rand()%2;
+        int ti=rand()%2+1;
         for(int j=0;j<ti;j++){
             key+=item;
         }
@@ -285,6 +285,9 @@ void test_journal(){
 //    bool flag=journal.findBlockHeader(block,bOffset,2307195330);
 //    cout<<"res.bool\t"<<flag<<endl;
 //    cout<<block<<"\t"<<bOffset<<endl;
+    auto vcd=journal._write(opvc);
+    for(auto d:vcd) cout<<d<<endl;
+    cout<<"\t\t\t\t\t\t\tDone!"<<endl;
     auto e=journal._read(0);
     for(auto f:e) cout<<f<<endl;
 //    for(auto e:opvc){
