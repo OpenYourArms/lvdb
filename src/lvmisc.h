@@ -22,6 +22,7 @@ typedef unsigned long long ULL;
 void showERROR(string str,bool ex=true);
 
 struct Data{
+    enum{DELETE=0,PUT=1,GET=2};
     string _key;
     string _value;
     ULL _sequenceNumber;
@@ -43,6 +44,8 @@ void toBuffer(char buffer[],int& pos,T obj){
 
 template <>//加结尾\0
 void toBuffer(char buffer[],int& pos,const char* str);
+template <>
+void toBuffer(char buffer[],int& pos,char* str);
 template <>//加结尾\0
 void toBuffer(char buffer[],int& pos,string str);
 void alignFileToMod(int fd,off_t mod);

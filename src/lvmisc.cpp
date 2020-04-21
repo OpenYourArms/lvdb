@@ -17,6 +17,10 @@ void toBuffer(char buffer[],int& pos,const char* cstr){
     pos+=len;
     buffer[pos++]='\0';
 }
+template <>
+void toBuffer(char buffer[],int& pos,char* cstr){
+    toBuffer(buffer,pos, const_cast<const char*>(cstr));
+}
 
 template <>
 void toBuffer(char buffer[],int& pos,string str){
