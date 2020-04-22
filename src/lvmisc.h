@@ -32,6 +32,10 @@ struct Data{
     friend ostream& operator<<(ostream& os,Data& a){
         return os<<setiosflags(ios::left)<<setw(4)<<a._key<<" : "<<a._value<<"\t"<<a._op<<"\t"<<a._sequenceNumber;
     }
+    static bool compare(Data& a,Data& b){
+        if(a._key!=b._key) return a._key<b._key;
+        return a._sequenceNumber>b._sequenceNumber;
+    }
 };
 
 template <typename T>
