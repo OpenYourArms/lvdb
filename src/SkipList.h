@@ -42,12 +42,16 @@ public:
     inline int randomHeight(){ return rand()%_MAX_HEIGHT + 1;}
     bool contains(string& key);
     inline bool equal(string& a,string& b){ return a==b; }
+    inline bool equal(Data& a,Data& b){return (!Data::compare(a,b))&&(!Data::compare(b,a));}
     Node* findGreatOrEqual(string &k, Node** prev);
+    Node* findGreatOrEqual(Data &data, Node** prev);
     Node* findLast() const;
     Node* findLessThan(string& k) const;
+    Node* findLessThan(Data& data) const;
     inline int getMaxHeight() const{ return _maxHeight; }
     void insert(Data& data);
-    inline bool keyIsAfterNode(string& k,Node* n)const{ return n&&k>n->_data._key; }
+    inline bool keyIsAfterNode(string& k,Node* n){ return n&&k>n->_data._key; }
+    inline bool keyIsAfterNode(Data& data,Node* n){ return n&&Data::compare(n->_data,data)&&(!equal(data,n->_data)); }
     Node* newNode(Data data,int height){
         int sz= sizeof(Node) + sizeof(Node*)*(height-1);
         //char* p=(char*)malloc(sz);

@@ -52,7 +52,23 @@ SkipList::Node* SkipList::findGreatOrEqual(string &k, Node** prev){
         }
     }
 }
-
+SkipList::Node* SkipList::findGreatOrEqual(Data &data, Node** prev){
+    Node* now=_head;
+    int levelPos=_maxHeight-1;
+    Node* nx=nullptr;
+    while(true){
+        nx=now->getNext(levelPos);
+        if(keyIsAfterNode(data,nx)){
+            now=nx;
+        }else{
+            if(prev) prev[levelPos]=now;
+            if(levelPos==0){
+                return nx;
+            }
+            --levelPos;
+        }
+    }
+}
 SkipList::Node* SkipList::findLast() const{
     Node* now=_head;
     Node* nx=nullptr;
@@ -76,18 +92,33 @@ SkipList::Node* SkipList::findLessThan(string& k) const{
         assert(now==_head||now->_data._key<k);
         nx=now->getNext(levelPos);
         if(nx==nullptr||nx->_data._key>=k){
-            if(levelPos) return now;
+            if(levelPos==0) return now;
             --levelPos;
         }else{
             now=nx;
         }
     }
 }
-
+SkipList::Node* SkipList::findLessThan(Data& data) const{
+    Node* now=_head;
+    Node* nx=nullptr;
+    int levelPos=_maxHeight-1;
+    while(true){
+        assert(now==_head||Data::compare(now->_data,data));
+        nx=now->getNext(levelPos);
+        if(nx==nullptr||(!Data::compare(nx->_data,data))){
+            if(levelPos==0) return now;
+            --levelPos;
+        }else{
+            now=nx;
+        }
+    }
+}
 void SkipList::insert(Data& data){
     Node* prev[_MAX_HEIGHT];
     Node* node=findGreatOrEqual(data._key,prev);
-    assert(node==nullptr||!equal(data._key,node->_data._key));
+    node=findGreatOrEqual(data,prev);
+    //assert(node==nullptr||!equal(data._key,node->_data._key));
     int height=randomHeight();
     if(height>_maxHeight){
         for(int i=_maxHeight;i<height;i++) prev[i]=_head;
@@ -111,9 +142,9 @@ void SkipList::showNodes(){
             node=node->getNext(i);
         }
     }
-    sort(vc.begin(),vc.end(),[](Data a,Data b){ return a._key<b._key; });
+    sort(vc.begin(),vc.end(),[](Data a,Data b){ return Data::compare(a,b);/*a._key<b._key;*/ });
     for(int i=0;i<vc.size();i++){
-        if(i&&vc[i]._key!=vc[i-1]._key){
+        if(i&&!equal(vc[i],vc[i-1])/*vc[i]._key!=vc[i-1]._key*/){
             cout<<endl;
         }
         cout<<vc[i]<<"\t\t";
@@ -132,5 +163,7 @@ void test_SkipList(){
         Data data(e,1,k,v);
         sl.insert(data);
     }
+    Data d2(33,1,"22","22");
+    sl.insert(d2);
     sl.showNodes();
 }
