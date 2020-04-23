@@ -7,6 +7,7 @@
 #include "../src/FakeAlloc.h"
 #include "../src/Journal.h"
 #include "../src/lvmisc.h"
+#include "../src/MemTable.h"
 
 // lvmisc.h
 TEST(toBuffer,templateT){
@@ -189,4 +190,29 @@ TEST_F(FakeAllocTest,getIndex){
 // Journal
 TEST(Journal,all){
     EXPECT_EQ(1,1);
+}
+// MemTable
+TEST(MemTable,findTable){
+    MemTable mt;
+    ASSERT_EQ(mt.findTable(),0);
+    mt.myTable[0].setNextStatus();
+    ASSERT_EQ(mt.findTable(),1);
+    mt.myTable[1].setNextStatus();
+    ASSERT_EQ(mt.findTable(),-1);
+}
+TEST(MemTable,saveData){// writeSSTable 函数暂时为空，跳表大小为100
+    MemTable mt;
+    int n=0;
+    for(int i=0;i<100;i++){
+        Data data(i,1,to_string(i),to_string(i));
+        if(mt.saveData(data)<0){
+            n=i+1;
+            break;
+        }
+    }
+    // 0-6   -> (11+2)*7=91 over
+    // 7-9   -> (11+2)*3=39 new
+    // 10-13 -> (11+4)*4=60 over
+    // 14 return=-1,i=14,n=15;
+    ASSERT_EQ(n,15);
 }
