@@ -60,6 +60,13 @@ TEST(exFileSize,full){
     fstat(fd,&fileStat);
     ASSERT_EQ(targetSize,fileStat.st_size);
 }
+TEST(Data,compare){
+    Data a(123,1,"afz","afz");
+    Data b(456,1,"bdr","bdr");
+    ASSERT_TRUE(Data::compare(a,b));
+    Data c(111,1,"bdr","old");
+    ASSERT_TRUE(Data::compare(b,c));
+}
 
 // SkipList
 TEST(SkipList,all){
