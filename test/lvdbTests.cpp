@@ -69,31 +69,77 @@ TEST(Data,compare){
 }
 
 // SkipList
-TEST(SkipList,all){
-    //test_SkipList();
+class SkipListTest:public ::testing::Test{
+protected:
     SkipList sl;
-    vector<int> vc={1,3,8,6,2,4,9,7,5,19,22,14};
-    /*
-1    : 1	1	1		1    : 1	1	1		1    : 1	1	1		1    : 1	1	1		1    : 1	1	1
-14   : 14	1	14		14   : 14	1	14
-19   : 19	1	19		19   : 19	1	19		19   : 19	1	19
-2    : 2	1	2		2    : 2	1	2
-22   : 22	1	22		22   : 22	1	22		22   : 22	1	22
-3    : 3	1	3		3    : 3	1	3		3    : 3	1	3
-4    : 4	1	4		4    : 4	1	4
-5    : 5	1	5		5    : 5	1	5		5    : 5	1	5		5    : 5	1	5		5    : 5	1	5
-6    : 6	1	6		6    : 6	1	6		6    : 6	1	6		6    : 6	1	6		6    : 6	1	6
-7    : 7	1	7		7    : 7	1	7		7    : 7	1	7
-8    : 8	1	8		8    : 8	1	8
-9    : 9	1	9		9    : 9	1	9		9    : 9	1	9		9    : 9	1	9
-     *
-     * */
-    for(auto e:vc){
-        string k=to_string(e);
-        string v=k;
-        Data data(e,Data::PUT,k,v);
-        sl.insert(data);
+    void SetUp() override {
+        vector<int> vc={1,3,8,6,2,4,9,7,5,19,22,14};
+        /*
+    1    : 1	1	1		1    : 1	1	1		1    : 1	1	1		1    : 1	1	1		1    : 1	1	1
+    14   : 14	1	14		14   : 14	1	14
+    19   : 19	1	19		19   : 19	1	19		19   : 19	1	19
+    2    : 2	1	2		2    : 2	1	2
+    22   : 22	1	22		22   : 22	1	22		22   : 22	1	22
+    3    : 3	1	3		3    : 3	1	3		3    : 3	1	3
+    4    : 4	1	4		4    : 4	1	4
+    5    : 5	1	5		5    : 5	1	5		5    : 5	1	5		5    : 5	1	5		5    : 5	1	5
+    6    : 6	1	6		6    : 6	1	6		6    : 6	1	6		6    : 6	1	6		6    : 6	1	6
+    7    : 7	1	7		7    : 7	1	7		7    : 7	1	7
+    8    : 8	1	8		8    : 8	1	8
+    9    : 9	1	9		9    : 9	1	9		9    : 9	1	9		9    : 9	1	9
+         *
+         * */
+        for(auto e:vc){
+            string k=to_string(e);
+            string v=k;
+            Data data(e,Data::PUT,k,v);
+            sl.insert(data);
+        }
     }
+    void TearDown() override {
+        ;
+    }
+};
+TEST_F(SkipListTest,equalData){
+    Data a(11,1,"11","11");
+    Data b(10,1,"11","11");
+    Data c(12,1,"101","11");
+    EXPECT_FALSE(sl.equal(a,b));
+    EXPECT_FALSE(sl.equal(c,a));
+    EXPECT_TRUE(Data::compare(a,b));
+}
+TEST_F(SkipListTest,keyIsAfterNodeData){
+    Data data1(12,1,"22","22");
+    Data data2(22,1,"22","22");
+    SkipList::Node *node=sl.newNode(data1,5);
+    ASSERT_FALSE(sl.keyIsAfterNode(data2,node));
+}
+TEST_F(SkipListTest,findGreatOrEqual){
+    Data data1(12,1,"22","22");
+    Data data2(22,1,"22","22");
+    sl.insert(data1);
+    // string
+    SkipList::Node* path[SkipList::_MAX_HEIGHT];
+    string s1="22";
+    auto rt=sl.findGreatOrEqual(s1,path);
+    EXPECT_TRUE(sl.equal(rt->_data,data2));
+    auto rt1=sl.findGreatOrEqual(data1,path);
+    EXPECT_TRUE(sl.equal(rt1->_data,data1));
+}
+TEST_F(SkipListTest,findLessThan){
+    Data data1(12,1,"22","22");
+    Data data2(22,1,"22","22");
+    Data data3(2,1,"2","2");
+    sl.insert(data1);
+    string s1="22";
+    auto e=sl.findLessThan(s1);
+    ASSERT_TRUE(sl.equal(e->_data,data3));
+    auto rt=sl.findLessThan(data1);
+    ASSERT_TRUE(sl.equal(rt->_data,data2));
+
+}
+TEST_F(SkipListTest,all){
+    //test_SkipList();
     SkipList::Node* path[SkipList::_MAX_HEIGHT];
     string key1=to_string(7);
     auto e=sl.findGreatOrEqual(key1,path);
