@@ -67,7 +67,12 @@ TEST(Data,compare){
     Data c(111,1,"bdr","old");
     ASSERT_TRUE(Data::compare(b,c));
 }
-
+TEST(Data,myByteSize){
+    Data a(1,1,"","");
+    Data b(1,1,"1","11");
+    ASSERT_EQ(a.myByteSize(),11+0);
+    ASSERT_EQ(b.myByteSize(),11+3);
+}
 // SkipList
 class SkipListTest:public ::testing::Test{
 protected:
