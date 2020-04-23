@@ -14,6 +14,8 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <unistd.h>
+using namespace std;
+
 namespace oyas {
     const string cli_log_path="/tmp/oyas.loopCli.log";
     class link_cli {
