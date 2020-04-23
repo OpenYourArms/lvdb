@@ -12,6 +12,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <unistd.h>
 using namespace std;
 namespace oyas{
     string get_time_str()
@@ -40,6 +41,46 @@ namespace oyas{
 
 
 }
+/*
+    cout<<"argc:\t"<<endl;
+    for(int i=1;i<argc;i++){
+        cout<<argv[i]<<endl;
+    }
+    int fd=-1;
+    if(argc>1){
+        cout<<"cli is running!"<<endl;
+        oyas::link_cli lc;
+        fd=lc.get_fd();
+        char buf[128];
+        bool f=true;
+        while(f){
+            memset(buf,0, sizeof(buf));
+            cin>>buf;
+            write(fd,buf, sizeof(buf));
+            cout<<"\t\t\t\tWrite OK"<<endl;
+            read(fd,buf, sizeof(buf));
+            cout<<buf<<endl;
+            cout<<"\t\t\t\tMSG OK!"<<endl;
+        }
+    }else{
+        cout<<"server is running!"<<endl;
+        oyas::link_server ls;
+        struct sockaddr_in clnt_addr;
+        socklen_t clnt_addr_size=sizeof(clnt_addr);
+        fd=ls.i_accept(&clnt_addr,clnt_addr_size);
+        char buf[128];
+        bool flag=true;
+        while(flag){
+            memset(buf,0, sizeof(buf));
+            read(fd,buf, sizeof(buf));
+            cout<<"GET \t"<<buf<<endl;
+            buf[0]='I';
+            buf[1]='C';
+            buf[2]='U';
+            write(fd,buf, sizeof(buf));
+            cout<<"\t\t\t\t\tdone!"<<endl<<endl;
+        }
+    }*/
 
 #endif
 
