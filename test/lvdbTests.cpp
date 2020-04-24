@@ -144,6 +144,14 @@ TEST_F(SkipListTest,findLessThan){
     ASSERT_TRUE(sl.equal(rt->_data,data2));
 
 }
+TEST_F(SkipListTest,writeIterator){
+    auto it=sl.getIterator();
+    Data data3(1,1,"1","1");
+    Data data(14,1,"14","14");
+    ASSERT_TRUE(sl.equal(it.nowPos->_data,data3));
+    ASSERT_TRUE(sl.equal((it++).nowPos->_data,data3));
+    ASSERT_TRUE(sl.equal(it.nowPos->_data,data));
+}
 TEST_F(SkipListTest,all){
     //test_SkipList();
     SkipList::Node* path[SkipList::_MAX_HEIGHT];

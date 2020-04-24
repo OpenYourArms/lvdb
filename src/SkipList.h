@@ -15,6 +15,7 @@
 #include <cassert>
 #include <ctime>
 #include <vector>
+#include <map>
 
 using namespace std;
 
@@ -34,6 +35,25 @@ struct Node{
     inline void setNext(int n, Node* node){
         assert(n>=0);
         _next[n]=node;
+    }
+};
+public:
+struct writeIterator{
+    Node* nowPos;
+    Node* preNode;
+    explicit writeIterator(Node* nd,Node* pre=nullptr):nowPos(nd),preNode(pre){}
+    writeIterator operator++(int){
+        auto e=*this;
+        preNode=nowPos;
+        assert(nowPos);
+        nowPos=nowPos->_next[0];
+        return e;
+    }
+    writeIterator& operator++(){
+        preNode=nowPos;
+        assert(nowPos);
+        nowPos=nowPos->_next[0];
+        return *this;
     }
 };
 public:
@@ -60,12 +80,13 @@ public:
         return (Node*)new(p) Node(data);
     }
     void showNodes();
+    writeIterator getIterator(){ return writeIterator(_head->_next[0]);}
 private:
     int _maxHeight;
     unsigned int _seed;// init
     Node* _head;
     FakeAlloc _fakeAlloc;
-    unordered_map<void*,int> _sizeMap;
+    map<void*,int> _sizeMap;
 };
 
 void test_SkipList();
