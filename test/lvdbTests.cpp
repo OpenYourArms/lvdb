@@ -74,6 +74,35 @@ TEST(Data,myByteSize){
     ASSERT_EQ(a.myByteSize(),11+0);
     ASSERT_EQ(b.myByteSize(),11+3);
 }
+TEST(Data,setToBuffer){
+    vector<Data> vc1;
+    int n=15;
+    for(int i=0;i<n;i++){
+        vc1.push_back(Data());
+        vc1.back()._sequenceNumber=i;
+        vc1.back()._op=rand()%3;
+        vc1.back()._key=to_string(i*10);
+        vc1.back()._value=to_string(i*11);
+    }
+    int MAX=4096;
+    char buf[MAX];
+    int pos=0;
+    for(auto e:vc1){
+        e.setToBuffer(buf,pos);
+    }
+    ASSERT_TRUE(pos<MAX);
+    int t=pos;
+    pos=0;
+    for(auto e:vc1){
+        Data data;
+        data.getFromBuffer(buf,pos);
+        EXPECT_EQ(data._sequenceNumber,e._sequenceNumber);
+        EXPECT_EQ(data._op,e._op);
+        EXPECT_STREQ(data._key.c_str(),e._key.c_str());
+        EXPECT_STREQ(data._value.c_str(),e._value.c_str());
+    }
+    ASSERT_EQ(t,pos);
+}
 // SkipList
 class SkipListTest:public ::testing::Test{
 protected:
