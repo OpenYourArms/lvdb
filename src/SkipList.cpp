@@ -5,7 +5,8 @@
 #include <algorithm>
 #include "SkipList.h"
 
-SkipList::SkipList():
+SkipList::SkipList(bool flag):
+        _flag(flag),
         _maxHeight(1),
         _seed(static_cast<unsigned int>(time(nullptr))){
     srand(_seed);
@@ -21,8 +22,11 @@ SkipList::~SkipList(){
     Node* nx=nullptr;
     while(now){
         nx=now->getNext(0);
-        //free(now);
-        _fakeAlloc.deallocate(now,_sizeMap[now]);
+        if(_flag){
+            _fakeAlloc.deallocate(now,_sizeMap[now]);
+        }else{
+            free(now);
+        }
         now=nx;
     }
 }

@@ -57,7 +57,7 @@ struct writeIterator{
     }
 };
 public:
-    SkipList();
+    explicit SkipList(bool flag=false);//true: use fakeAlloc, false: malloc;
     ~SkipList();
     inline int randomHeight(){ return rand()%_MAX_HEIGHT + 1;}
     bool contains(string& key);
@@ -74,8 +74,14 @@ public:
     inline bool keyIsAfterNode(Data& data,Node* n){ return n&&Data::compare(n->_data,data)&&(!equal(data,n->_data)); }
     Node* newNode(Data data,int height){
         int sz= sizeof(Node) + sizeof(Node*)*(height-1);
+        char* p=nullptr;
+        if(_flag){
+            p=_fakeAlloc.allocate(sz);
+        }else{
+            p=(char*)malloc(sz);
+        }
         //char* p=(char*)malloc(sz);
-        char* p=_fakeAlloc.allocate(sz);
+        //char* p=_fakeAlloc.allocate(sz);
         _sizeMap[p]=sz;
         return (Node*)new(p) Node(data);
     }
@@ -87,6 +93,7 @@ private:
     Node* _head;
     FakeAlloc _fakeAlloc;
     map<void*,int> _sizeMap;
+    bool _flag;
 };
 
 void test_SkipList();
