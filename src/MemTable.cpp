@@ -54,7 +54,7 @@ int MemTable::saveData(Data &data) {
 void testMemTable(){
     // 先去main,定义全局变量sstM;  SSTManage sstM=SSTManage("/tmp/tmpp/SSTManage");
     MemTable mt;
-    int N=1000;
+    int N=100000;
     for(int i=0;i<N;i++){
         Data data(i,1,to_string(i),to_string(i));
         auto e=mt.saveData(data);

@@ -15,7 +15,7 @@
 struct TableBase{//一个 memTable
     enum {MUTABLE=true,IMMUTABLE=false};
     // todo size最大值待设置
-    enum {TABLE_MAX_SIZE=100};
+    enum {TABLE_MAX_SIZE=2*1024*1024/12*5};//大概1 m大小
     unique_ptr<SkipList> tbList_ptr;
     int listByteSize;
     bool imFlag;
@@ -35,6 +35,8 @@ public:
     int findTable();//-1 代表没表可用
     int saveData(Data& data);
 };
+
+void testMemTable();
 
 #endif
 
