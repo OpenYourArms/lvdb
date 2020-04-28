@@ -148,7 +148,40 @@ void SSTable::readSST() {
     close(_fileDescriptor);
     _fileDescriptor=-2;
 }
-
+void SSTable::setInfo() {
+    struct stat fileStat;
+    fstat(_fileDescriptor,&fileStat);
+    int pos=fileStat.st_size;
+    assert(pos> sizeof(int)+ sizeof(int));
+    pos-= sizeof(_indexBeginOffset)+ sizeof(_indexEndOffset);
+    pread(_fileDescriptor,&_indexBeginOffset, sizeof(_indexBeginOffset),pos);
+    pos+= sizeof(_indexBeginOffset);
+    pread(_fileDescriptor,&_indexEndOffset, sizeof(_indexEndOffset),pos);
+    //read blockIndex
+    pos=_indexBeginOffset;
+    int len=0;
+    while(pos<_indexEndOffset){
+        pread(_fileDescriptor,&len, sizeof(len),pos);
+        pos+=sizeof(len);
+        pread(_fileDescriptor,_buffer,len,pos);
+        pos+=len;
+        len=0;
+        _indexVector.push_back(BlockIndex(-1));
+        auto& e=_indexVector.back();
+        e.getFromBuffer(_buffer,len);
+    }
+}
+SSTable::Iterator SSTable::begin() {
+    Iterator iterator(_fileDescriptor);
+    iterator.indexIterator=_indexVector.begin();
+    iterator.init();
+    return iterator;
+}
+SSTable::Iterator SSTable::end() {
+    Iterator iterator(_fileDescriptor);
+    iterator.indexIterator=_indexVector.end();
+    return iterator;
+}
 
 void testSSTable(bool flag){
     string file="/tmp/tmpp/SST0001.db";
@@ -156,7 +189,7 @@ void testSSTable(bool flag){
     SkipList sl;
     vector<int> vc;
     //vc={1,3,8,6,2,4,9,7,5,19,22,14};
-    int N=100000;
+    int N=1500;
     for(int i=0;i<N;i++){
         vc.push_back(i);
     }
@@ -170,6 +203,27 @@ void testSSTable(bool flag){
         ssTable.writeSST(sl.getIterator());
     } else{
         ssTable.readSST();
+    }
+}
+/*
+testSSTable(1);
+testSSTable(0);
+testSSTableIterator(); 三个配合测试效果不错
+ * */
+void testSSTableIterator(){
+    string file="/tmp/tmpp/SST0001.db";
+    SSTable ssTable(file);
+    ssTable.setInfo();
+    auto e=ssTable.begin();
+    auto end=ssTable.end();
+    while(e!=end){
+        auto data=*e;
+        if(data._sequenceNumber==1171){
+            int iqy=5;
+            iqy++;
+        }
+        cout<<data<<endl;
+        e++;
     }
 }
 

@@ -123,7 +123,44 @@ public:
             os<<idx.maxData<<endl;
         }
     };
-
+    struct Iterator{
+        int fd;
+        char buffer[BLOCK_MAX_SIZE];
+        int pos;
+        Data data;
+        vector<BlockIndex>::iterator indexIterator;
+        int blockDataEnd;
+        Iterator(int f):fd(f){}
+        void init(){
+            // todo 此处存在风险,当indexVector.end()处调用pread内容未知。
+            pos=(*indexIterator).usedSize;
+            if(pos<=0||pos>4096) return;// 防止走到.end(),发生未知错误。
+            pread(fd,buffer,pos,(*indexIterator).beginOffset);
+            pos-= sizeof(int);
+            memcpy(&blockDataEnd,buffer+pos, sizeof(int));
+            pos=0;
+        }
+        Iterator operator ++(int){
+            auto tmp=*this;
+            // 未遍历完全
+            data.getFromBuffer(buffer,pos);
+            if(pos<blockDataEnd){
+                ;
+            }else{
+                indexIterator++;
+                init();
+                //data.getFromBuffer(buffer,pos);
+            }
+            return tmp;
+        }
+        Data operator*(){
+            data.getFromBuffer(buffer,pos);
+            pos-=data.myByteSize();
+            return  data;
+        }
+        bool operator==(Iterator& b){ return indexIterator==b.indexIterator;}
+        bool operator!=(Iterator& b){ return !(*this==b);}
+    };
 
     char _buffer[BLOCK_MAX_SIZE];
     int _pageOffset;
@@ -148,9 +185,13 @@ public:
     }
     //int writeSST();
     void readSST();
+    void setInfo();//填充sstable文件信息,方便遍历或读取。
+    Iterator begin();
+    Iterator end();
 };
 
 void testSSTable(bool flag);
+void testSSTableIterator();
 
 #endif
 
