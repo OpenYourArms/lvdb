@@ -170,6 +170,9 @@ void SSTable::setInfo() {
         auto& e=_indexVector.back();
         e.getFromBuffer(_buffer,len);
     }
+    _usedFileSize=fileStat.st_size;
+    _miniData=_indexVector.front().minData;
+    _maxData=_indexVector.back().maxData;
 }
 SSTable::Iterator SSTable::begin() {
     Iterator iterator(_fileDescriptor);
