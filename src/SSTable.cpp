@@ -89,6 +89,54 @@ int SSTable::writeSST(SkipList::writeIterator iterator) {
     close(_fileDescriptor);
     _fileDescriptor=-2;
 }
+int SSTable::writeSST(vector<Data>::iterator begin, vector<Data>::iterator end) {
+    unique_ptr<BlockStruct> bp = nullptr;
+    assert(_pageOffset==0);
+    while(begin!=end) {
+        Data& data=*begin;
+        if(!bp){
+            bp.reset(new BlockStruct());
+            _indexVector.push_back(BlockIndex(_pageOffset));
+            auto& idx=_indexVector.back();
+            bp->addData(data);
+            idx.minData=data;
+        }else{
+            auto& lastIdx=_indexVector.back();
+            if(bp->addData(data)){
+                ;//lastIdx.usedSize+=data.myByteSize();
+            }else{
+                lastIdx.maxData=bp->dataVector.back();
+                lastIdx.usedSize=bp->writeToFile(_buffer,_fileDescriptor,_pageOffset);
+                BlockStruct* p=bp.release();
+                assert(p);
+                delete p;
+                bp.reset(new BlockStruct());
+                _pageOffset+=BLOCK_MAX_SIZE;
+                _indexVector.push_back(BlockIndex(_pageOffset));
+                auto& idx=_indexVector.back();
+                bp->addData(data);
+                idx.minData=data;
+            }
+        }
+        begin++;
+    }
+    if(bp){
+        auto& lastIdx=_indexVector.back();
+        lastIdx.maxData=bp->dataVector.back();
+        lastIdx.usedSize=bp->writeToFile(_buffer,_fileDescriptor,_pageOffset);
+        BlockStruct* p=bp.release();
+        assert(p);
+        delete p;
+        _pageOffset+=BLOCK_MAX_SIZE;
+    }
+    _indexBeginOffset=_pageOffset;
+    writeBlockIndex();
+    _indexEndOffset=_pageOffset;
+    writeFooter();
+    _usedFileSize=_pageOffset;
+    close(_fileDescriptor);
+    _fileDescriptor=-2;
+}
 void SSTable::readSST() {
     assert(_fileDescriptor>=0);
     struct stat fileStat;
