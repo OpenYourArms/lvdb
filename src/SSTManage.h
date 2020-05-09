@@ -17,7 +17,8 @@
 using namespace std;
 class SSTManage{
     // 2m*8, 20m*4, 200m*8, 2000m*16, 20G*32,
-    enum{MAX_LEVEL=12,MAX_BUFFER_SIZE=1024};
+    enum{MAX_LEVEL=4,MAX_BUFFER_SIZE=1024};
+    enum{LEVEL0_SIZE=1*1024*1024,LEVEL0_FILE_COUNT=4};// 1M bytes
     // todo 为了测试，把SSTRecord 开放
 public:
     struct SSTRecord{
@@ -26,6 +27,8 @@ public:
         Data minData;
         Data maxData;
         string fileName;
+        //int useCount;先不要，做成单线程
+        //SSTRecord():levelNumber(0),fileSize(0),fileName(0)/*,useCount(0)*/{}
         void setToBuffer(char buf[],int& pos){
             toBuffer(buf,pos,levelNumber);
             toBuffer(buf,pos,fileSize);
@@ -93,13 +96,18 @@ public:
         }
     }
     void writeToSST(SkipList::writeIterator iterator);
+    void writeToSST(vector<Data>::iterator begin,vector<Data>::iterator end,int lev);
     // todo 合并多个文件，传入迭代器SST迭代器。
-    // void mergeFiles();
+    vector<SSTRecord> choseFileRecord(int level);
+    vector<Data> mergeData(vector<SSTRecord>& files);
+    void mergeSSTable(int lev);
 };
 
 void test_SSTManage_read_write();
 
 void test_SSTManage_with_SSTable();
+
+void test_SSTManage_SSTable_Merge();
 
 #endif
 
