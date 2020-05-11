@@ -54,9 +54,9 @@ struct Data{
         if(a._key!=b._key) return a._key<b._key;
         return a._sequenceNumber>b._sequenceNumber;
     }
-    static Data getInvalidData(){ return Data(-1,-1,"","");}
+    static Data getInvalidData(){ return Data(-1,-1,"InvalidKey","InvalidValue");}
     bool isInvalidData(){
-        return _sequenceNumber==-1&&_op==-1&&_key==""&&_value=="";
+        return _sequenceNumber==-1&&_op==-1&&_key=="InvalidKey"&&_value=="InvalidValue";
     }
     int myByteSize(){// op 被压缩为char
         return sizeof(ULL) + sizeof(char) + strlen(_key.c_str())+1 + strlen(_value.c_str())+1;

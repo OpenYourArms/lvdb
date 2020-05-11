@@ -76,7 +76,7 @@ TEST(Data,myByteSize){
 }
 TEST(Data,getInvalidDataAndIsInvalidData){
     Data data=Data::getInvalidData();
-    Data dt1(-1,-1,"","");
+    Data dt1(-1,-1,"InvalidKey","InvalidValue");
     EXPECT_TRUE(data.isInvalidData());
     EXPECT_TRUE(dt1.isInvalidData());
 }
