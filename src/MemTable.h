@@ -15,7 +15,7 @@
 struct TableBase{//一个 memTable
     enum {MUTABLE=true,IMMUTABLE=false};
     // todo size最大值待设置
-    enum {TABLE_MAX_SIZE=2*1024*1024/12*5};//大概1 m大小
+    enum {TABLE_MAX_SIZE=2*1024*1024/12*5/8};//大概1 m大小
     unique_ptr<SkipList> tbList_ptr;
     int listByteSize;
     bool imFlag;
@@ -25,7 +25,7 @@ struct TableBase{//一个 memTable
     inline void setNextStatus(){imFlag=!imFlag;}
     int insert(Data& data);// 返回码对应字符车串
     int writeSSTable();
-
+    Data findGreatOrEqual(Data& data);
 };
 class MemTable{
     enum {TABLE_NUMBER=2};
@@ -34,6 +34,7 @@ public:
 public:
     int findTable();//-1 代表没表可用
     int saveData(Data& data);
+    Data findGreatOrEqual(Data& data);
 };
 
 void testMemTable();

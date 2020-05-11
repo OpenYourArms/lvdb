@@ -4,6 +4,8 @@
 
 #include "MemTable.h"
 #include <future>
+#include <algorithm>
+
 extern SSTManage sstM;// 全局唯一
 int TableBase::insert(Data& data) {
     int dataSize=data.myByteSize();
@@ -24,6 +26,14 @@ int TableBase::writeSSTable() {
     listByteSize=0;
     dataCounter=0;
     imFlag=MUTABLE;
+}
+Data TableBase::findGreatOrEqual(Data& data){
+    auto node_ptr=(*tbList_ptr).findGreatOrEqual(data,nullptr);
+    if(node_ptr){
+        return (*node_ptr)._data;
+    }else{
+        return Data::getInvalidData();
+    }
 }
 
 int MemTable::findTable() {
@@ -50,6 +60,21 @@ int MemTable::saveData(Data &data) {
     }
     return pos;
 }
+Data MemTable::findGreatOrEqual(Data& data){
+    vector<Data> vc;
+    for(int i=0;i<TABLE_NUMBER;i++){
+        Data dt1=myTable[i].findGreatOrEqual(data);
+        if(!dt1.isInvalidData()){
+            vc.push_back(dt1);
+        }
+    }
+    sort(vc.begin(),vc.end(),[](Data dt1,Data dt2){return Data::compare(dt1,dt2);});
+    if(vc.size()){
+        return vc[0];
+    }else{
+        return Data::getInvalidData();
+    }
+}
 
 void testMemTable(){
     // 先去main,定义全局变量sstM;  SSTManage sstM=SSTManage("/tmp/tmpp/SSTManage");
@@ -63,4 +88,9 @@ void testMemTable(){
             break;
         }
     }
+    /*测试memTable的查找方法
+    Data dt(999999,1,"999999","");
+    auto rt=mt.findGreatOrEqual(dt);
+    cout<<"find"<<endl<<dt<<endl;
+    cout<<"now"<<endl<<rt<<endl;*/
 }
