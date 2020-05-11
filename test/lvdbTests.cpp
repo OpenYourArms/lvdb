@@ -74,6 +74,12 @@ TEST(Data,myByteSize){
     ASSERT_EQ(a.myByteSize(),11+0);
     ASSERT_EQ(b.myByteSize(),11+3);
 }
+TEST(Data,getInvalidDataAndIsInvalidData){
+    Data data=Data::getInvalidData();
+    Data dt1(-1,-1,"","");
+    EXPECT_TRUE(data.isInvalidData());
+    EXPECT_TRUE(dt1.isInvalidData());
+}
 TEST(Data,setToBuffer){
     vector<Data> vc1;
     int n=15;
