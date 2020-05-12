@@ -45,6 +45,7 @@ void SSTManage::storeSSTInfo() {
     pos+= sizeof(_nextNumber);
     // record
     int rsz=0;int ml=0;
+    cout<<endl;
     for(auto& r:SSTInfoVector){
         cout<<ml++<<"::\t";
         for(auto& c:r){
