@@ -150,6 +150,7 @@ private:
 public:
     Journal(string filePath);
     ~Journal();
+    bool empty(){return _logFileSize<FILE_ZERO_SIZE;}
     void initBlockerHeader();
     void initData(Data& data,OperationInfo& opInfo,OPERATION_p& op);
     vector<LogChunk> initLogChunk(vector<OperationInfo>&vc);
