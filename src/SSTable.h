@@ -179,8 +179,8 @@ public:
     ~SSTable(){if(_fileDescriptor>=0){close(_fileDescriptor);}}
     void writeBlockIndex();
     void writeFooter();
-    int writeSST(SkipList::writeIterator iterator);
-    int writeSST(vector<Data>::iterator begin,vector<Data>::iterator end);
+    ULL writeSST(SkipList::writeIterator iterator);
+    ULL writeSST(vector<Data>::iterator begin,vector<Data>::iterator end);
     void setMinMax(){
         assert(_indexVector.size());
         _miniData=_indexVector[0].minData;

@@ -17,6 +17,7 @@
 using namespace std;
 class SSTManage{
     // 2m*8, 20m*4, 200m*8, 2000m*16, 20G*32,
+public:
     enum{MAX_LEVEL=4,MAX_BUFFER_SIZE=1024};
     enum{LEVEL0_SIZE=1*1024*1024,LEVEL0_FILE_COUNT=4};// 1M bytes
     // todo 为了测试，把SSTRecord 开放
@@ -64,12 +65,15 @@ public:
     int _fileSize;
     int _counter;
     int _nextNumber;
+    ULL _mxSequenceNumber;
     vector<int> _levelSizeVector;
     vector<vector<SSTRecord>> SSTInfoVector;
 public:
+    int getMyHeaderSize(){return sizeof(_counter)+ sizeof(_nextNumber)+ sizeof(_mxSequenceNumber);}
+    ULL getMxSequenceNumber(){ return _mxSequenceNumber;}
     void loadSSTInfo();
     void storeSSTInfo();
-    explicit SSTManage(string filePath):_counter(0),_nextNumber(0),_fileDescriptor(-1),_levelSizeVector(MAX_LEVEL,0),SSTInfoVector(MAX_LEVEL,vector<SSTRecord>()){
+    explicit SSTManage(string filePath):_counter(0),_nextNumber(0),_mxSequenceNumber(0),_fileDescriptor(-1),_levelSizeVector(MAX_LEVEL,0),SSTInfoVector(MAX_LEVEL,vector<SSTRecord>()){
         assert(filePath.length()>0);
         _fileDescriptor=open(filePath.c_str(),O_RDWR|O_CREAT);
         if(_fileDescriptor==-1){
@@ -81,12 +85,14 @@ public:
         }
         struct stat fileStat;
         fstat(_fileDescriptor,&fileStat);
-        _fileSize= sizeof(_counter)+ sizeof(_nextNumber);
-        if(fileStat.st_size> sizeof(_counter)+ sizeof(_nextNumber)){
+        int headerSize=getMyHeaderSize();
+        _fileSize=headerSize;
+        if(fileStat.st_size> headerSize){
             loadSSTInfo();
         } else{
             _counter=0;
             _nextNumber=0;
+            _mxSequenceNumber=0;
         }
     }
     ~SSTManage(){

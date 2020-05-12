@@ -16,6 +16,10 @@ void SSTManage::loadSSTInfo(){
     // nextNumber
     pread(_fileDescriptor,&_nextNumber, sizeof(_nextNumber),pos);
     pos+= sizeof(_nextNumber);
+    // mxSequenceNumber
+    pread(_fileDescriptor,&_mxSequenceNumber, sizeof(_mxSequenceNumber),pos);
+    pos+= sizeof(_mxSequenceNumber);
+    cout<<"SSTManageHeader\t"<<_counter<<"\t"<<_nextNumber<<"\t"<<_mxSequenceNumber<<endl;
     // records
     int length=0,bufPos=0;
     for(int i=0;i<_counter;i++){
@@ -43,6 +47,10 @@ void SSTManage::storeSSTInfo() {
     // nextNumber
     pwrite(_fileDescriptor,&_nextNumber, sizeof(_nextNumber),pos);
     pos+= sizeof(_nextNumber);
+    // mxSequenceNumber
+    pwrite(_fileDescriptor,&_mxSequenceNumber, sizeof(_mxSequenceNumber),pos);
+    pos+= sizeof(_mxSequenceNumber);
+    cout<<"SSTManageHeader\t"<<_counter<<"\t"<<_nextNumber<<"\t"<<_mxSequenceNumber<<endl;
     // record
     int rsz=0;int ml=0;
     cout<<endl;
@@ -65,7 +73,8 @@ void SSTManage::writeToSST(SkipList::writeIterator iterator){
     record.levelNumber=0;
     record.fileName="/tmp/tmpp/SST"+to_string(_nextNumber++)+"db";
     SSTable table(record.fileName);
-    table.writeSST(iterator);
+    auto mx=table.writeSST(iterator);
+    _mxSequenceNumber=max(mx,_mxSequenceNumber);
     table.setMinMax();
     record.minData=table._miniData;
     record.maxData=table._maxData;
@@ -84,7 +93,8 @@ void SSTManage::writeToSST(vector<Data>::iterator begin, vector<Data>::iterator 
     record.levelNumber=lev;
     record.fileName="/tmp/tmpp/SST"+to_string(_nextNumber++)+"db";
     SSTable table(record.fileName);
-    table.writeSST(begin,end);
+    auto mx=table.writeSST(begin,end);
+    _mxSequenceNumber=max(mx,_mxSequenceNumber);
     table.setMinMax();
     record.minData=table._miniData;
     record.maxData=table._maxData;
@@ -200,7 +210,7 @@ void SSTManage::mergeSSTable(int lev) {
             if(saw.count(c.fileName)==0) allRecord.push_back(c);
         }
     }
-    _fileSize= sizeof(_counter)+ sizeof(_nextNumber);
+    _fileSize= getMyHeaderSize();
     _counter=0;
     /*
      * _levelSizeVector(MAX_LEVEL,0),SSTInfoVector(MAX_LEVEL,vector<SSTRecord>())
@@ -235,7 +245,7 @@ void test_SSTManage_read_write(){
     for(int i=vc.size();i<oldc+n;i++){
         vc.push_back(SSTManage::SSTRecord());
         auto& e=vc.back();
-        e.levelNumber=rand()%12;
+        e.levelNumber=rand()%SSTManage::MAX_LEVEL;
         e.fileSize=(rand()%10)*100+20*87;
         e.minData=Data(i*2+1,rand()%3,to_string(i),to_string(i*12));
         e.maxData=Data(i*2+2,rand()%3,to_string(i+10086),to_string((i+105)*12));

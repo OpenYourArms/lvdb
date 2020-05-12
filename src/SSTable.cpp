@@ -41,11 +41,13 @@ void SSTable::writeFooter() {
     pwrite(_fileDescriptor,_buffer,pos,_pageOffset);
     _pageOffset+=sz;
 }
-int SSTable::writeSST(SkipList::writeIterator iterator) {
+ULL SSTable::writeSST(SkipList::writeIterator iterator) {
+    ULL mxSeq=0;
     unique_ptr<BlockStruct> bp = nullptr;
     assert(_pageOffset==0);
     while(iterator.nowPos!=nullptr) {
         Data& data=iterator.nowPos->_data;
+        mxSeq=max(mxSeq,data._sequenceNumber);
         if(!bp){
             bp.reset(new BlockStruct());
             _indexVector.push_back(BlockIndex(_pageOffset));
@@ -88,12 +90,15 @@ int SSTable::writeSST(SkipList::writeIterator iterator) {
     _usedFileSize=_pageOffset;
     close(_fileDescriptor);
     _fileDescriptor=-2;
+    return mxSeq;
 }
-int SSTable::writeSST(vector<Data>::iterator begin, vector<Data>::iterator end) {
+ULL SSTable::writeSST(vector<Data>::iterator begin, vector<Data>::iterator end) {
+    ULL mxSeq=0;
     unique_ptr<BlockStruct> bp = nullptr;
     assert(_pageOffset==0);
     while(begin!=end) {
         Data& data=*begin;
+        mxSeq=max(mxSeq,data._sequenceNumber);
         if(!bp){
             bp.reset(new BlockStruct());
             _indexVector.push_back(BlockIndex(_pageOffset));
@@ -136,6 +141,7 @@ int SSTable::writeSST(vector<Data>::iterator begin, vector<Data>::iterator end) 
     _usedFileSize=_pageOffset;
     close(_fileDescriptor);
     _fileDescriptor=-2;
+    return mxSeq;
 }
 Data SSTable::findGreatOrEqual(Data &data) {
     // 前提，sst的文件描述符读到，setInfo也调用了。
