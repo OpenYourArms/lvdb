@@ -51,6 +51,8 @@ public:
             maxDataSize=max(sz,maxDataSize);
             int paddsz=sz + (sizeof(int)+sizeof(int)+maxDataSize)*(sliceVector.size()+1) + sizeof(int);// data + slice + indexPoint
             if(usedSize+paddsz>BLOCK_MAX_SIZE){
+                auto& slice=sliceVector.back();
+                slice.maxData=dataVector.back();
                 return false;
             }
             if(dataVector.empty()){
@@ -184,7 +186,7 @@ public:
         _miniData=_indexVector[0].minData;
         _maxData=_indexVector.back().maxData;
     }
-    //int writeSST();
+    Data findGreatOrEqual(Data& data);
     void readSST();
     void setInfo();//填充sstable文件信息,方便遍历或读取。
     Iterator begin();
@@ -193,7 +195,7 @@ public:
 
 void testSSTable(bool flag);
 void testSSTableIterator();
-
+void testSSTableFind();
 #endif
 
 #endif //LVDB_SSTABLE_H
