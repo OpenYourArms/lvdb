@@ -137,6 +137,64 @@ int SSTable::writeSST(vector<Data>::iterator begin, vector<Data>::iterator end) 
     close(_fileDescriptor);
     _fileDescriptor=-2;
 }
+Data SSTable::findGreatOrEqual(Data &data) {
+    // 前提，sst的文件描述符读到，setInfo也调用了。
+    /*
+     * 在索引信息中，先二分，查找范围，确定页，再进行页内查找；
+     * 在页内部，先遍历索引信息，再细化搜索
+     * */
+    // 二分
+    int l=0,r=_indexVector.size();
+    int mi=0;
+    while(l<r){
+        mi=l+(r-l)/2;
+        // 两种情况，一是minData大于等于data,二是minData<data<=maxData,所以合并变成maxData大于等于data;
+        if(!Data::compare(_indexVector[mi].maxData,data)){
+            r=mi;
+        }else{
+            l=mi+1;
+        }
+    }
+    //确认 minData <= data <= maxData
+    bool inMiddle=!Data::compare(_indexVector[r].maxData,data)&&!Data::compare(data,_indexVector[r].minData);
+    // 不在此页，返回无效值
+    if(!inMiddle){
+        return Data::getInvalidData();
+    }
+    // 页内索引确定
+    auto& page=_indexVector[r];
+    pread(_fileDescriptor,_buffer,page.usedSize,page.beginOffset);
+    BlockStruct bs;
+    int sliceNum=0;
+    // slice
+    int pos=page.usedSize;
+    pos-= sizeof(int);
+    int idxOff=0;
+    memcpy(&idxOff,_buffer+pos, sizeof(int));
+    while(idxOff<pos){
+        bs.sliceVector.push_back(BlockStruct::SliceIndex(-1,-1));
+        auto& si=bs.sliceVector.back();
+        si.getFromBuffer(_buffer,idxOff);
+        if(Data::compare(si.maxData,data)){
+            sliceNum++;
+        }
+    }
+    assert(sliceNum>=0&&sliceNum<bs.sliceVector.size());
+    BlockStruct::SliceIndex okSlice=bs.sliceVector[sliceNum];
+    // 页内段查找
+    int be=okSlice.sliceOffset;
+    int tar=be+okSlice.used;
+    while(be<tar){
+        bs.dataVector.push_back(Data());
+        auto& dt=bs.dataVector.back();
+        dt.getFromBuffer(_buffer,be);
+        bs.usedSize+=dt.myByteSize();
+        if(!Data::compare(dt,data)){
+            return dt;
+        }
+    }
+    return Data::getInvalidData();
+}
 void SSTable::readSST() {
     assert(_fileDescriptor>=0);
     struct stat fileStat;
@@ -276,5 +334,13 @@ void testSSTableIterator(){
         cout<<data<<endl;
         e++;
     }
+}
+void testSSTableFind(){
+    string file="/tmp/tmpp/SST17db";
+    SSTable ssTable(file);
+    ssTable.setInfo();
+    Data targetData(5787,1,"5787","");
+    auto rt=ssTable.findGreatOrEqual(targetData);
+    cout<<"Find is :\n"<<rt<<endl;
 }
 
