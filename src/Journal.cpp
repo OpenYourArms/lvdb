@@ -235,6 +235,7 @@ void Journal::readLogChunk(off_t& block,off_t& bOffset,LogChunk& logChunk){
     readLogInfo(block,bOffset,logChunk.logInfo);
     // todo 读完本块最后一个chunk,需要自动跳block,方案有二，1 - 重新读header; 2 - 建立索引存每个block的尺寸。
     // todo 可以被pread优化时把block放入内存，就可以直接取到了。
+    // 以上todo已被解决，换块操作放在 _read函数的nowHeader 相关操作。
 }
 void Journal::LogChunk::getChunkData(vector<Data> &vcData){
     //todo
@@ -252,10 +253,19 @@ vector<Data> Journal::_read(ULL seq){
     off_t bOffset;
     off_t block=0;
     bool flag=findBlockHeader(block,bOffset,seq);
+    BlockHeader nowHeader;
+    pread(_fileDescriptor,&nowHeader, sizeof(nowHeader),block);
     while(!(block==_lastBlockOffset&&bOffset==_blockHeader.nextChunkOffset)){
         LogChunk logChunk;
+        // 读到结尾，换下一块
+        if(bOffset==nowHeader.nextChunkOffset){
+            block+=MAX_BLOCK_SIZE;
+            bOffset= sizeof(nowHeader);
+            pread(_fileDescriptor,&nowHeader, sizeof(nowHeader),block);
+        }
         readLogChunk(block,bOffset,logChunk);
         logChunk.getChunkData(res);
+//        cout<<"read journal:\t"<<res.back()<<"\tblock:\t"<<block<<"\tbOffset:\t"<<bOffset<<endl;
     }
     return res;
 }
