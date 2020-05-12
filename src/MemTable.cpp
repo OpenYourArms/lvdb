@@ -6,7 +6,8 @@
 #include <future>
 #include <algorithm>
 
-extern SSTManage sstM;// 全局唯一
+//extern SSTManage sstM;// 全局唯一
+SSTManage sstM=SSTManage("/tmp/tmpp/SSTManage");
 int TableBase::insert(Data& data) {
     int dataSize=data.myByteSize();
     assert(getLeftSpace()>=dataSize);
