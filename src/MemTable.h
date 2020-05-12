@@ -15,7 +15,7 @@
 struct TableBase{//一个 memTable
     enum {MUTABLE=true,IMMUTABLE=false};
     // todo size最大值待设置
-    enum {TABLE_MAX_SIZE=2*1024*1024/12*5/8};//大概1 m大小
+    enum {TABLE_MAX_SIZE=2*1024*1024/12*5/8/8};//大概16 k大小
     unique_ptr<SkipList> tbList_ptr;
     int listByteSize;
     bool imFlag;
