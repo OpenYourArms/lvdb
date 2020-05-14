@@ -54,6 +54,12 @@ struct Data{
         if(a._key!=b._key) return a._key<b._key;
         return a._sequenceNumber>b._sequenceNumber;
     }
+    static bool lessEqual(Data& a,Data& b){// a<=b !a>b !b<a
+        return !compare(b,a);
+    }
+    static bool greaterEqual(Data& a,Data& b){
+        return lessEqual(b,a);
+    }
     static Data getInvalidData(){ return Data(-1,-1,"InvalidKey","InvalidValue");}
     bool isInvalidData(){
         return _sequenceNumber==-1&&_op==-1&&_key=="InvalidKey"&&_value=="InvalidValue";

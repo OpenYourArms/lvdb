@@ -68,6 +68,17 @@ TEST(Data,compare){
     Data c(111,1,"bdr","old");
     ASSERT_TRUE(Data::compare(b,c));
 }
+TEST(Data,lessEqual){
+    Data a(123,1,"afz","afz");
+    Data b(456,1,"bdr","bdr");
+    Data c(123,1,"afz","afz");
+    Data d(155,1,"afz","afz");
+    Data e(111,1,"afz","afz");
+    EXPECT_TRUE(Data::lessEqual(a,b));
+    EXPECT_TRUE(Data::lessEqual(a,c));
+    EXPECT_TRUE(Data::lessEqual(d,a));
+    EXPECT_TRUE(Data::lessEqual(a,e));
+}
 TEST(Data,myByteSize){
     Data a(1,1,"","");
     Data b(1,1,"1","11");
