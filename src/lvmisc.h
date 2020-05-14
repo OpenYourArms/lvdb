@@ -46,7 +46,7 @@ struct Data{
     ULL _sequenceNumber;
     int _op;
     Data()= default;
-    Data(int seq,int op,string k,string v=""):_sequenceNumber(seq),_op(op),_key(k),_value(v){}
+    Data(ULL seq,int op,string k,string v=""):_sequenceNumber(seq),_op(op),_key(k),_value(v){}
     friend ostream& operator<<(ostream& os,Data& a){
         return os<<setiosflags(ios::left)<<setw(4)<<a._key<<" : "<<a._value<<"\t"<<a._op<<"\t"<<a._sequenceNumber;
     }
