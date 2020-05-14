@@ -107,6 +107,7 @@ public:
     vector<SSTRecord> choseFileRecord(int level);
     vector<Data> mergeData(vector<SSTRecord>& files);
     void mergeSSTable(int lev);
+    Data findGreatOrEqual(Data& data);
 };
 
 void test_SSTManage_read_write();

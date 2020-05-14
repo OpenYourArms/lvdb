@@ -7,6 +7,7 @@
 #include <set>
 #include <queue>
 #include <memory>
+#include <algorithm>
 
 void SSTManage::loadSSTInfo(){
     //counter
@@ -227,6 +228,39 @@ void SSTManage::mergeSSTable(int lev) {
     for(auto e:saw){
         remove(e.c_str());
     }
+}
+Data SSTManage::findGreatOrEqual(Data &data) {
+    bool flag=false;
+    // 0层
+    vector<Data> res;
+    for(int j=0;j<SSTInfoVector[0].size();j++){
+        auto& e=SSTInfoVector[0][j];
+        if(Data::lessEqual(e.minData,data)&&Data::lessEqual(data,e.maxData)){
+            SSTable ssTable(e.fileName);
+            ssTable.setInfo();
+            res.push_back(ssTable.findGreatOrEqual(data));
+        }
+    }
+    sort(res.begin(),res.end(),[](Data dt1,Data dt2){return Data::compare(dt1,dt2);});
+    if(res.size()&&res[0]._key==data._key){
+        return res[0];
+    }
+    // 非0层
+    for(int i=1;i<SSTInfoVector.size();i++){
+        for(int j=0;j<SSTInfoVector[i].size();j++){
+            auto& e=SSTInfoVector[i][j];
+            if(Data::lessEqual(e.minData,data)&&Data::lessEqual(data,e.maxData)){
+                SSTable ssTable(e.fileName);
+                ssTable.setInfo();
+                auto rt=ssTable.findGreatOrEqual(data);
+                if(rt._key==data._key){
+                    return rt;
+                }
+                break;
+            }
+        }
+    }
+    return Data::getInvalidData();
 }
 void test_SSTManage_read_write(){
     SSTManage sstM("/tmp/tmpp/SSTManage");
