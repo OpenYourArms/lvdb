@@ -18,6 +18,8 @@
 
 using namespace std;
 typedef unsigned long long ULL;
+typedef pair<string,string> KV_p;
+typedef pair<int,KV_p> OPERATION_p;
 
 void showERROR(string str,bool ex=true);
 
@@ -38,6 +40,9 @@ template <>//加结尾\0
 void toBuffer(char buffer[],int& pos,string str);
 void alignFileToMod(int fd,off_t mod);
 void exFileSize(int fd,off_t size);
+OPERATION_p parseString(char *str,string& op);
+OPERATION_p parseString(string str,string& op);
+void testParseString();
 
 struct Data{
     enum{DELETE=0,PUT=1,GET=2};

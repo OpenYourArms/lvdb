@@ -61,6 +61,46 @@ TEST(exFileSize,full){
     fstat(fd,&fileStat);
     ASSERT_EQ(targetSize,fileStat.st_size);
 }
+TEST(parseString,full){
+    OPERATION_p valid={-1,{"valid OPERATION_p","valid OPERATION_p"}};
+    OPERATION_p exc,rt;
+    string str="";
+    string op="";
+    string opexc="";
+
+    str="put '1\" '1'";
+    op="";
+    exc=valid;
+    opexc="put";
+    rt=parseString(str,op);
+    EXPECT_EQ(rt,exc);
+    EXPECT_STREQ(op.c_str(),opexc.c_str());
+
+    str="put '1' '1'";
+    op="";
+    exc={Data::PUT,{"1","1"}};
+    opexc="put";
+    rt=parseString(str,op);
+    EXPECT_EQ(rt,exc);
+    EXPECT_STREQ(op.c_str(),opexc.c_str());
+
+    str="Get '1' ";
+    op="";
+    exc={Data::GET,{"1",""}};
+    opexc="get";
+    rt=parseString(str,op);
+    EXPECT_EQ(rt,exc);
+    EXPECT_STREQ(op.c_str(),opexc.c_str());
+
+    str="deleTe '1' ";
+    op="";
+    exc={Data::DELETE,{"1",""}};
+    opexc="delete";
+    rt=parseString(str,op);
+    EXPECT_EQ(rt,exc);
+    EXPECT_STREQ(op.c_str(),opexc.c_str());
+
+}
 TEST(Data,compare){
     Data a(123,1,"afz","afz");
     Data b(456,1,"bdr","bdr");
