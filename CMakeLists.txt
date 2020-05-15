@@ -11,6 +11,11 @@ add_subdirectory(connect)
 # test dir
 add_subdirectory(test)
 
-add_executable(lvdb main.cpp)
+add_executable(lvdb_main main.cpp)
+target_link_libraries(lvdb_main SrcLibs cntSome)
 
-target_link_libraries(lvdb SrcLibs cntSome)
+add_executable(lvdb_cli cli.cpp)
+target_link_libraries(lvdb_cli SrcLibs cntSome)
+
+add_executable(lvdb_server server.cpp)
+target_link_libraries(lvdb_server SrcLibs cntSome)
