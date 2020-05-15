@@ -14,6 +14,7 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <unistd.h>
+#include <iostream>
 using namespace std;
 
 namespace oyas {
@@ -53,6 +54,7 @@ namespace oyas {
             int rt=connect(skt_fd,(struct sockaddr*)(&server_addr), sizeof(server_addr));
             if(rt==-1){
                 wt_log(cli_log_path,"fail to call connect()!");
+                cout<<"no server program is running, please run a server program."<<endl;
                 sleep(1);
                 exit(2);
             }
