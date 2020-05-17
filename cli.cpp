@@ -16,7 +16,7 @@ int main(){
 }
 void lvdb_cli(){
     oyas::link_cli cli;
-    cout<<"ffk"<<endl;
+    cout<<"lvdb is OK."<<endl;
     int fd=cli.get_fd();
     char wbuf[MY_BUFFER_SIZE]={};
     char rbuf[MY_BUFFER_SIZE]={};
