@@ -92,12 +92,12 @@ vector<Journal::LogChunk> Journal::initLogChunk(vector<OperationInfo>&vc){
     return res;
 }
 void Journal::_writeLogChunk(Journal::LogChunk& logChunk){
-    cout<<logChunk<<endl;
+//    cout<<logChunk<<endl;
     char buf[MAX_BLOCK_SIZE];
     int pos=0;
     logChunk.toBuf(buf,pos);
-    cout<<"logChunk write done:\t"<<pos<<endl;
-    cout<<buf<<endl;
+//    cout<<"logChunk write done:\t"<<pos<<endl;
+//    cout<<buf<<endl;
     int leftSize=MAX_BLOCK_SIZE-_blockHeader.nextChunkOffset;
     if(leftSize<logChunk.logChunkHeader.length){
         _writeBlockHeaderBack();
@@ -117,9 +117,9 @@ Data Journal::_write(OPERATION_p op) {
     Data data;
     OperationInfo opInfo;
     initData(data,opInfo,op);
-    cout<<"data: \t##\t";
-    cout<<data<<endl;
-    cout<<opInfo<<endl;
+//    cout<<"data: \t##\t";
+//    cout<<data<<endl;
+//    cout<<opInfo<<endl;
     vector<LogChunk> vc=initLogChunk(vector<OperationInfo>()={opInfo});
     for(auto e:vc){
         _writeLogChunk(e);
