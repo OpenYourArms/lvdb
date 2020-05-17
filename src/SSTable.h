@@ -84,7 +84,7 @@ public:
             //最后一条slice的maxData;
             assert(dataVector.size());
             assert(sliceVector.size());
-            auto lastSlice=sliceVector.back();
+            auto& lastSlice=sliceVector.back();
             lastSlice.maxData=dataVector.back();
             int idxOffset=pos;
             for(auto& e:sliceVector){
