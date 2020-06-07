@@ -74,8 +74,8 @@ int main() {
 
     // 新数据
     string key="";
-    int tms=10;
-    int N=100000;
+    int tms=5;
+    int N=10000;
 
     int base=1000;
     clock_t t0,t1,sumt=0;
@@ -84,7 +84,9 @@ int main() {
     for(int k=0;k<tms;k++){
         t0=clock();
         for(int i=0;i<N;i++){
+//            int op1=Data::PUT;
 //            int op1=Data::GET;
+//            int op1=Data::DELETE;
             int op1=rand()%3;
 //            cout<<k<<"***"<<i<<endl;
 //            key=to_string(base+i+(k*10));
